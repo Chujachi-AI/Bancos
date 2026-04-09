@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a1a">
+<title>vault.leo</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💳</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:#f4f3f0;color:#1a1a1a;min-height:100vh;-webkit-font-smoothing:antialiased}
+input,select,button{font-family:inherit;font-size:14px}
+button{cursor:pointer}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes barGrow{from{width:0}to{width:var(--bw)}}
+@keyframes checkPop{0%{transform:scale(0)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
+@keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.header{background:rgba(255,255,255,.94);border-bottom:1px solid #e8e6e1;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);flex-wrap:wrap;gap:8px}
+.logo{font-size:20px;font-weight:700;letter-spacing:-.5px}.logo span{color:#8b7355;font-weight:400}
+.nav{display:flex;gap:3px;flex-wrap:wrap}
+.nbtn{padding:6px 14px;border-radius:8px;border:none;font-size:11px;font-weight:400;background:transparent;color:#888;transition:all .2s;white-space:nowrap}
+.nbtn:hover{background:#eee}
+.nbtn.on{font-weight:700;color:#fff}
+.ct{max-width:1200px;margin:0 auto;padding:20px 16px}
+.cd{background:#fff;border-radius:16px;padding:20px 22px;border:1px solid #ebe9e4;margin-bottom:14px}
+.ct2{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:#999;margin-bottom:10px}
+.inp{width:100%;padding:10px 14px;border-radius:10px;border:1px solid #ddd;outline:none;background:#fafaf8;transition:border .2s}
+.inp:focus{border-color:#8b7355}
+.sel{width:100%;padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fafaf8;outline:none}
+.lbl{font-size:11px;font-weight:600;color:#888;display:block;margin-bottom:4px}
+.btn{padding:11px 28px;border-radius:10px;border:none;font-weight:600;color:#fff;transition:all .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.btn:active{transform:scale(.97)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:10px 12px;border-bottom:2px solid #eee;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#999}
+td{padding:10px 12px;border-bottom:1px solid #f4f3f0}
+tr:hover td{background:#fafaf8}
+.tag{display:inline-block;padding:2px 9px;border-radius:12px;font-size:10px;font-weight:600}
+.bh{border-radius:16px;padding:24px 28px;margin-bottom:16px;position:relative;overflow:hidden}
+.toggle{width:42px;height:24px;border-radius:12px;position:relative;transition:background .2s;flex-shrink:0;cursor:pointer}
+.tk{width:18px;height:18px;border-radius:9px;background:#fff;position:absolute;top:3px;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.mpill{padding:8px 0;border-radius:10px;text-align:center;cursor:pointer;transition:all .15s;border:1px solid transparent;font-size:12px}
+.mpill:hover{background:#f0eeea}
+.mpill.on{background:#1a1a1a;color:#fff;font-weight:600}
+.mpill.has{border-color:#ddd;font-weight:500}
+.toast{position:fixed;top:20px;right:20px;background:#16a34a;color:#fff;padding:14px 24px;border-radius:12px;font-weight:600;font-size:14px;z-index:999;animation:slideIn .3s ease;display:flex;align-items:center;gap:10px;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+.toast svg{animation:checkPop .4s ease both}
+@media(max-width:768px){.g2,.g3{grid-template-columns:1fr}.ct{padding:14px 10px}.cd{padding:16px 14px}.bh{padding:20px 18px}.nbtn{padding:5px 10px;font-size:10px}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+<script type="text/babel">
+const{useState,useMemo,useEffect}=React;
+const MO=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const OW=["LEO","MAMÁ"];
+const CATS=["Transporte","Comida y Restaurantes","Ropa y Moda","Suscripciones","Telecomunicaciones","Tecnología","Salud","Hogar","Entretenimiento","Supermercado","Gimnasio","Belleza","Regalos","Intereses y Comisiones","Pagos y Abonos","Seguros","MSI","Deudas Anteriores","Transferencias","Otros"];
+const CC={"Transporte":"#3b82f6","Comida y Restaurantes":"#ef4444","Ropa y Moda":"#ec4899","Suscripciones":"#8b5cf6","Telecomunicaciones":"#06b6d4","Tecnología":"#6366f1","Salud":"#10b981","Hogar":"#f97316","Entretenimiento":"#a855f7","Supermercado":"#84cc16","Gimnasio":"#14b8a6","Belleza":"#f472b6","Regalos":"#fbbf24","Intereses y Comisiones":"#dc2626","Pagos y Abonos":"#22c55e","Seguros":"#64748b","MSI":"#7c3aed","Deudas Anteriores":"#b91c1c","Transferencias":"#0ea5e9","Otros":"#94a3b8"};
+const BK={
+  INVEX:{name:"INVEX (IKEA)",corte:26,pago:15,color:"#0066b2",grad:"linear-gradient(135deg,#001f3f,#004080)",txt:"#e8f4fd"},
+  Nu:{name:"Nu Crédito",corte:7,pago:17,color:"#820ad1",grad:"linear-gradient(135deg,#1a0033,#4a0080)",txt:"#f0e0ff"},
+  Santander:{name:"Santander",corte:3,pago:24,color:"#ec0000",grad:"linear-gradient(135deg,#2a0000,#5a0000)",txt:"#ffe0e0"},
+  Liverpool:{name:"Liverpool",corte:19,pago:19,color:"#e91e8c",grad:"linear-gradient(135deg,#2a0020,#5a0040)",txt:"#ffe0f0"},
+  NuDeb:{name:"Nu Débito",corte:0,pago:0,color:"#820ad1",grad:"linear-gradient(135deg,#0d001a,#2a0044)",txt:"#f0e0ff"},
+};
+const BKS=["INVEX","Nu","Santander","Liverpool"];
+const fmt=n=>{if(!n&&n!==0)return"$0.00";const a=Math.abs(n);return(n<0?"-$":"$")+a.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2})};
+const uid=()=>Math.random().toString(36).slice(2,9);
+
+function getBillingPeriod(fechaStr,banco){
+  const d=new Date(fechaStr+"T12:00:00");
+  const day=d.getDate(),m=d.getMonth(),y=d.getFullYear();
+  const corte=BK[banco].corte,pago=BK[banco].pago;
+  // Nu corte 7: Apr 7–May 6 → pay May 17 | Santander corte 3: Apr 3–May 2 → pay May 24
+  // INVEX corte 26: Mar 26–Apr 25 → pay May 15 | Liverpool corte 19: Mar 19–Apr 18 → pay May 19
+  // Rule: day >= corte → cycle started this month → pay next month
+  //       day < corte  → cycle started last month → pay this month
+  let pm,py;
+  if(day>=corte){pm=m+1;py=y;if(pm>11){pm=0;py++}}
+  else{pm=m;py=y}
+  let cm=pm-1,cy=py;if(cm<0){cm=11;cy--}
+  return{mesCorte:MO[cm],añoCorte:cy,mesPago:MO[pm],añoPago:py,pagoDate:`${pago} de ${MO[pm]} ${py}`};
+}
+
+const LS={
+  get:(k,fb)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch{return fb}},
+  set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch{}},
+};
+
+function App(){
+  const V="v6";
+  const[data,setData]=useState(()=>LS.get("vl-d-"+V,[]));
+  const[nudeb,setNudeb]=useState(()=>LS.get("vl-n-"+V,[]));
+  const[view,setView]=useState("dashboard");
+  const[bv,setBv]=useState("INVEX");
+  const[ts,setTs]=useState(200);
+  const[toast,setToast]=useState(false);
+  // Form state - SIMPLE state, no functional updaters needed
+  const[ff,setFf]=useState("");const[fc,setFc]=useState("");const[fm,setFm]=useState("");
+  const[ft,setFt]=useState("LEO");const[fcat,setFcat]=useState("Otros");const[fcust,setFcust]=useState("");
+  // Deb form
+  const[df,setDf]=useState("");const[dc,setDc]=useState("");const[dm,setDm]=useState("");
+  const[dcat,setDcat]=useState("Otros");const[dcust,setDcust]=useState("");
+  const[isMSI,setIsMSI]=useState(false);const[msiN,setMsiN]=useState(3);
+  const[editId,setEditId]=useState(null);const[editDebId,setEditDebId]=useState(null);
+  const[selM,setSelM]=useState(null);
+  const[mob,setMob]=useState(typeof window!=='undefined'&&window.innerWidth<768);
+
+  useEffect(()=>{LS.set("vl-d-"+V,data)},[data]);
+  useEffect(()=>{LS.set("vl-n-"+V,nudeb)},[nudeb]);
+  useEffect(()=>{const h=()=>setMob(window.innerWidth<768);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h)},[]);
+  useEffect(()=>{setSelM(null)},[view,bv]);
+
+  const showToast=()=>{setToast(true);setTimeout(()=>setToast(false),2500)};
+  const clearForm=()=>{setFf("");setFc("");setFm("");setFt("LEO");setFcat("Otros");setFcust("");setIsMSI(false)};
+  const clearDeb=()=>{setDf("");setDc("");setDm("");setDcat("Otros");setDcust("")};
+
+  const addEntry=(banco)=>{
+    if(!ff||!fc||!fm)return;
+    const mp=parseFloat(fm),cat=fcat==="Otros"&&fcust?fcust:fcat,bp=getBillingPeriod(ff,banco);
+    if(isMSI&&msiN>1){
+      const si=MO.indexOf(bp.mesCorte);let ne=[],t=ts;
+      for(let i=0;i<msiN;i++){
+        const mi=(si+i)%12,yo=Math.floor((si+i)/12),ay=bp.añoCorte+yo;
+        let pmi=mi+1,apy=ay;if(pmi>11){pmi=0;apy++}
+        t++;ne.push({id:uid(),banco,mesCorte:MO[mi],añoCorte:ay,mesPago:MO[pmi],añoPago:apy,titular:ft,fecha:ff,concepto:`${fc} (MSI ${i+1}/${msiN})`,monto:mp,cat,_ts:t});
+      }
+      setData(p=>[...p,...ne]);setTs(t);
+    }else{
+      const t=ts+1;setTs(t);
+      setData(p=>[...p,{id:uid(),banco,mesCorte:bp.mesCorte,añoCorte:bp.añoCorte,mesPago:bp.mesPago,añoPago:bp.añoPago,titular:ft,fecha:ff,concepto:fc,monto:mp,cat,_ts:t}]);
+    }
+    clearForm();showToast();
+  };
+  const addDeb=()=>{
+    if(!df||!dc||!dm)return;
+    const cat=dcat==="Otros"&&dcust?dcust:dcat,t=ts+1;setTs(t);
+    setNudeb(p=>[...p,{id:uid(),fecha:df,concepto:dc,monto:parseFloat(dm),cat,_ts:t}]);
+    clearDeb();showToast();
+  };
+  const del=id=>setData(p=>p.filter(r=>r.id!==id));
+  const delD=id=>setNudeb(p=>p.filter(r=>r.id!==id));
+  const startEdit=r=>{setEditId(r.id);setFf(r.fecha);setFc(r.concepto);setFm(String(r.monto));setFt(r.titular);setFcat(r.cat||"Otros");setFcust("")};
+  const cancelEdit=()=>{setEditId(null);clearForm()};
+  const saveEdit=()=>{
+    const cat=fcat==="Otros"&&fcust?fcust:fcat;
+    const old=data.find(r=>r.id===editId);
+    const bp=getBillingPeriod(ff,old?.banco||bv);
+    setData(p=>p.map(r=>r.id===editId?{...r,fecha:ff,concepto:fc,monto:parseFloat(fm),titular:ft,cat,mesCorte:bp.mesCorte,añoCorte:bp.añoCorte,mesPago:bp.mesPago,añoPago:bp.añoPago}:r));
+    cancelEdit();showToast();
+  };
+  const startEditD=r=>{setEditDebId(r.id);setDf(r.fecha);setDc(r.concepto);setDm(String(r.monto));setDcat(r.cat||"Otros");setDcust("")};
+  const cancelEditD=()=>{setEditDebId(null);clearDeb()};
+  const saveEditD=()=>{
+    const cat=dcat==="Otros"&&dcust?dcust:dcat;
+    setNudeb(p=>p.map(r=>r.id===editDebId?{...r,fecha:df,concepto:dc,monto:parseFloat(dm),cat}:r));
+    cancelEditD();showToast();
+  };
+
+  // Computed
+  const bd=useMemo(()=>data.filter(r=>r.banco===bv),[data,bv]);
+  const bf=useMemo(()=>selM?bd.filter(r=>r.mesPago===selM):bd,[bd,selM]);
+  const bp=bf.filter(r=>r.monto>0);
+  const bL=bp.filter(r=>r.titular==="LEO").reduce((s,r)=>s+r.monto,0);
+  const bM=bp.filter(r=>r.titular==="MAMÁ").reduce((s,r)=>s+r.monto,0);
+  const bMonths=useMemo(()=>{const m={};bd.forEach(r=>{const k=r.mesPago;if(!m[k])m[k]={t:0,l:0,m:0};if(r.monto>0){m[k].t+=r.monto;m[k][r.titular==="LEO"?"l":"m"]+=r.monto}});return m},[bd]);
+
+  const ds=useMemo(()=>{
+    const p=data.filter(r=>r.monto>0);
+    const tL=p.filter(r=>r.titular==="LEO").reduce((s,r)=>s+r.monto,0);
+    const tM=p.filter(r=>r.titular==="MAMÁ").reduce((s,r)=>s+r.monto,0);
+    const byCat={};p.forEach(r=>{byCat[r.cat||"Otros"]=(byCat[r.cat||"Otros"]||0)+r.monto});
+    const byBank={};BKS.forEach(b=>{byBank[b]=p.filter(r=>r.banco===b).reduce((s,r)=>s+r.monto,0)});
+    const byMonth={};p.forEach(r=>{byMonth[r.mesPago||"?"]=(byMonth[r.mesPago||"?"]||0)+r.monto});
+    return{tL,tM,total:tL+tM,byCat,byBank,byMonth};
+  },[data]);
+
+  // Helper: category bars
+  const catBars=(items,title)=>{
+    const g={};items.filter(r=>r.monto>0).forEach(r=>{g[r.cat||"Otros"]=(g[r.cat||"Otros"]||0)+r.monto});
+    const s=Object.entries(g).sort((a,b)=>b[1]-a[1]);if(!s.length)return null;
+    const mx=s[0][1],tot=s.reduce((a,[,v])=>a+v,0);
+    return <div className="cd"><div className="ct2">{title||"Por Categoría"}</div>{s.map(([c,v])=><div key={c} style={{display:"flex",alignItems:"center",gap:10,padding:"5px 0"}}>
+      <div style={{width:8,height:8,borderRadius:3,background:CC[c]||"#999",flexShrink:0}}/>
+      <div style={{flex:1}}><div style={{display:"flex",justifyContent:"space-between",fontSize:12}}><span style={{fontWeight:500}}>{c}</span><span style={{color:"#999"}}>{((v/tot)*100).toFixed(1)}%</span></div>
+      <div style={{height:5,borderRadius:3,background:"#f0eeea",overflow:"hidden",marginTop:2}}><div style={{height:"100%",borderRadius:3,background:CC[c]||"#999",width:`${(v/mx)*100}%`}}/></div></div>
+      <div style={{fontSize:12,fontWeight:600,minWidth:70,textAlign:"right"}}>{fmt(v)}</div>
+    </div>)}</div>;
+  };
+
+  // Donut
+  const donut=(d,sz=130)=>{const tot=d.reduce((s,x)=>s+x.v,0);if(!tot)return null;const r=sz/2-10;const ci=2*Math.PI*r;let off=0;
+    return <svg width={sz} height={sz} viewBox={`0 0 ${sz} ${sz}`} style={{transform:"rotate(-90deg)"}}><circle cx={sz/2} cy={sz/2} r={r} fill="none" stroke="#eee" strokeWidth="3"/>
+    {d.map((x,i)=>{const p=x.v/tot;const da=p*ci;const o=off;off+=da;return <circle key={i} cx={sz/2} cy={sz/2} r={r} fill="none" stroke={x.c} strokeWidth="3" strokeLinecap="round" strokeDasharray={`${da} ${ci-da}`} strokeDashoffset={-o}/>})}</svg>};
+
+  const nav=(v)=>{if(BKS.includes(v)){setView("bank");setBv(v)}else setView(v);cancelEdit();cancelEditD()};
+
+  return <div>
+    {toast&&<div className="toast"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round"><path d="M5 12l5 5L20 7"/></svg>Registrado</div>}
+
+    <div className="header">
+      <div className="logo">vault<span>.leo</span></div>
+      <div className="nav">{["dashboard",...BKS,"NuDeb"].map(v=>{
+        const on=(view==="bank"&&bv===v)||view===v;
+        const lb=v==="NuDeb"?"Nu Débito":v==="dashboard"?"Dashboard":BK[v]?.name;
+        return <button key={v} className={`nbtn${on?" on":""}`} style={on?{background:BK[v]?.color||"#1a1a1a"}:{}} onClick={()=>nav(v)}>{lb}</button>
+      })}</div>
+    </div>
+
+    <div className="ct">
+    {/* ═══ DASHBOARD ═══ */}
+    {view==="dashboard"&&<>
+      <div className={mob?"":"g3"} style={mob?{display:"flex",flexDirection:"column",gap:12}:{marginBottom:14}}>
+        <div className="cd"><div className="ct2">Total Cargos</div><div style={{fontSize:30,fontWeight:700,letterSpacing:"-1px"}}>{fmt(ds.total)}</div><div style={{fontSize:12,color:"#999",marginTop:4}}>{data.filter(r=>r.monto>0).length} movimientos</div></div>
+        <div className="cd"><div className="ct2">Leo</div><div style={{fontSize:26,fontWeight:700}}>{fmt(ds.tL)}</div><div style={{fontSize:12,color:"#999",marginTop:4}}>{((ds.tL/(ds.total||1))*100).toFixed(1)}%</div></div>
+        <div className="cd"><div className="ct2">Mamá</div><div style={{fontSize:26,fontWeight:700,color:"#8b7355"}}>{fmt(ds.tM)}</div><div style={{fontSize:12,color:"#999",marginTop:4}}>{((ds.tM/(ds.total||1))*100).toFixed(1)}%</div></div>
+      </div>
+
+      {data.length===0&&<div className="cd" style={{textAlign:"center",padding:"50px 20px"}}><div style={{fontSize:40,marginBottom:12}}>📊</div><div style={{fontSize:18,fontWeight:600,marginBottom:6}}>¡Bienvenido a vault.leo!</div><div style={{color:"#999"}}>Selecciona un banco para empezar a registrar</div></div>}
+
+      {data.length>0&&<>
+        <div className="cd"><div className="ct2">Próximos Pagos</div>
+          <div className={mob?"":"g2"} style={mob?{display:"flex",flexDirection:"column",gap:10}:{gap:10}}>
+            {BKS.map(b=>{const it=data.filter(r=>r.banco===b&&r.monto>0);const tot=it.reduce((s,r)=>s+r.monto,0);const l=it.filter(r=>r.titular==="LEO").reduce((s,r)=>s+r.monto,0);const m=it.filter(r=>r.titular==="MAMÁ").reduce((s,r)=>s+r.monto,0);
+              return <div key={b} style={{background:BK[b].grad,borderRadius:14,padding:"16px 18px",color:BK[b].txt,cursor:"pointer"}} onClick={()=>nav(b)}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:13,fontWeight:700}}>{BK[b].name}</span><span style={{fontSize:10,opacity:.6}}>Día {BK[b].pago}</span></div>
+                <div style={{fontSize:22,fontWeight:700,marginBottom:4}}>{fmt(tot)}</div>
+                <div style={{display:"flex",gap:16,fontSize:11}}><span>Leo: {fmt(l)}</span><span style={{opacity:.7}}>Mamá: {fmt(m)}</span></div>
+              </div>})}
+          </div>
+        </div>
+
+        <div className={mob?"":"g2"} style={mob?{display:"flex",flexDirection:"column",gap:12}:{gap:12,marginBottom:14}}>
+          <div className="cd" style={{display:"flex",alignItems:"center",gap:20,justifyContent:"center",flexWrap:"wrap"}}>
+            {donut([{v:ds.tL,c:"#1a1a1a"},{v:ds.tM,c:"#8b7355"}])}
+            <div><div className="ct2">Leo vs Mamá</div>
+              <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:6,fontSize:13}}><div style={{width:12,height:12,borderRadius:3,background:"#1a1a1a"}}/>Leo: <strong>{fmt(ds.tL)}</strong></div>
+              <div style={{display:"flex",alignItems:"center",gap:8,fontSize:13}}><div style={{width:12,height:12,borderRadius:3,background:"#8b7355"}}/>Mamá: <strong>{fmt(ds.tM)}</strong></div>
+            </div>
+          </div>
+          <div className="cd"><div className="ct2">Por Banco</div>
+            {BKS.map(b=>{const v=ds.byBank[b]||0;const pct=(v/(ds.total||1))*100;
+              return <div key={b} style={{display:"flex",alignItems:"center",gap:10,padding:"7px 0"}}>
+                <div style={{width:70,fontSize:12,fontWeight:500}}>{b}</div>
+                <div style={{flex:1,height:8,borderRadius:4,background:"#f0eeea",overflow:"hidden"}}><div style={{height:"100%",borderRadius:4,background:BK[b].color,width:`${pct}%`,transition:"width .5s"}}/></div>
+                <div style={{fontSize:12,fontWeight:600,minWidth:75,textAlign:"right"}}>{fmt(v)}</div>
+              </div>})}
+          </div>
+        </div>
+
+        {Object.keys(ds.byMonth).length>0&&<div className="cd"><div className="ct2">Gasto por Mes</div>
+          <div style={{display:"flex",alignItems:"flex-end",gap:mob?4:10,height:130}}>
+            {MO.map(m=>{const v=ds.byMonth[m]||0;const mx=Math.max(...Object.values(ds.byMonth),1);const h=Math.max(4,(v/mx)*110);
+              return <div key={m} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center"}}>
+                <div style={{fontSize:9,color:"#999",marginBottom:2}}>{v>0?fmt(v):""}</div>
+                <div style={{width:"100%",maxWidth:28,height:v>0?h:4,background:v>0?"linear-gradient(to top,#1a1a1a,#555)":"#eee",borderRadius:4,transition:"height .5s"}}/>
+                <div style={{fontSize:9,color:"#666",marginTop:4}}>{m.slice(0,3)}</div>
+              </div>})}
+          </div>
+        </div>}
+
+        {catBars(data,"Todas las Categorías")}
+
+        <div className="cd"><div className="ct2">Últimos Registros</div>
+          {[...data].sort((a,b)=>(b._ts||0)-(a._ts||0)).slice(0,10).map((r,i)=><div key={r.id} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 0",borderBottom:i<9?"1px solid #f4f3f0":""}}>
+            <div style={{width:6,height:6,borderRadius:3,background:BK[r.banco]?.color}}/>
+            <div style={{flex:1,minWidth:0}}><div style={{fontSize:12,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.concepto}</div>
+            <div style={{fontSize:10,color:"#aaa"}}>{r.banco} · {r.fecha} · <span style={{color:r.titular==="LEO"?"#555":"#8b7355"}}>{r.titular}</span> → {r.mesPago}</div></div>
+            <div style={{fontSize:13,fontWeight:600,color:r.monto<0?"#16a34a":"#1a1a1a"}}>{fmt(r.monto)}</div>
+          </div>)}
+        </div>
+      </>}
+    </>}
+
+    {/* ═══ BANK ═══ */}
+    {view==="bank"&&<>
+      <div className="bh" style={{background:BK[bv].grad,color:BK[bv].txt}}>
+        <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:2,opacity:.5,marginBottom:6}}>{BK[bv].name}</div>
+        <div style={{fontSize:34,fontWeight:700,letterSpacing:"-1px",marginBottom:8}}>{fmt(bL+bM)}</div>
+        <div style={{display:"flex",gap:24,marginBottom:10}}>
+          <div><div style={{fontSize:10,opacity:.5}}>Leo</div><div style={{fontSize:16,fontWeight:600}}>{fmt(bL)}</div></div>
+          <div><div style={{fontSize:10,opacity:.5}}>Mamá</div><div style={{fontSize:16,fontWeight:600}}>{fmt(bM)}</div></div>
+        </div>
+        <div style={{background:"rgba(255,255,255,.1)",borderRadius:10,padding:"8px 14px",fontSize:12,display:"inline-block"}}>Corte: día {BK[bv].corte} · Pago: día {BK[bv].pago}</div>
+      </div>
+
+      <div className="cd" style={{padding:"14px 16px"}}>
+        <div className="ct2">Calendario</div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(6,1fr)",gap:6}}>
+          <div className={`mpill${!selM?" on":""}`} onClick={()=>setSelM(null)}>Todos</div>
+          {MO.map(m=>{const d=bMonths[m];return <div key={m} className={`mpill${selM===m?" on":""}${d?" has":""}`} onClick={()=>setSelM(selM===m?null:m)}>
+            <div>{m.slice(0,3)}</div>{d&&<div style={{fontSize:10,fontWeight:600,marginTop:2}}>{fmt(d.t)}</div>}
+          </div>})}
+        </div>
+      </div>
+
+      {selM&&bMonths[selM]&&<div className="cd" style={{background:"#fafaf8"}}>
+        <div style={{fontSize:14,fontWeight:700,marginBottom:4}}>Pago de {selM}</div>
+        <div style={{fontSize:12,color:"#666"}}>Límite: <strong>día {BK[bv].pago} de {selM}</strong></div>
+        <div style={{display:"flex",gap:20,marginTop:6,fontSize:13}}>
+          <div>Leo: <strong>{fmt(bMonths[selM].l)}</strong></div>
+          <div style={{color:"#8b7355"}}>Mamá: <strong>{fmt(bMonths[selM].m)}</strong></div>
+          <div>Total: <strong>{fmt(bMonths[selM].t)}</strong></div>
+        </div>
+      </div>}
+
+      {catBars(bf)}
+
+      {/* REGISTER FORM — all inputs are individual state, no inner component */}
+      <div className="cd">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div className="ct2">{editId?"✎ Editar":"+ Registrar"}</div>
+          {editId&&<button onClick={cancelEdit} style={{background:"none",border:"none",color:"#999",fontSize:12}}>✕ Cancelar</button>}
+        </div>
+        <div className={mob?"":"g3"} style={mob?{display:"flex",flexDirection:"column",gap:10}:{gap:10,marginBottom:14}}>
+          <div><label className="lbl">Fecha del cargo</label><input type="date" className="inp" value={ff} onChange={e=>setFf(e.target.value)}/></div>
+          <div><label className="lbl">Monto (- = abono)</label><input type="number" step="0.01" className="inp" placeholder="0.00" value={fm} onChange={e=>setFm(e.target.value)}/></div>
+          <div><label className="lbl">Titular</label><select className="sel" value={ft} onChange={e=>setFt(e.target.value)}>{OW.map(o=><option key={o}>{o}</option>)}</select></div>
+          <div><label className="lbl">Concepto</label><input className="inp" placeholder="Descripción..." value={fc} onChange={e=>setFc(e.target.value)}/></div>
+          <div><label className="lbl">Categoría</label><select className="sel" value={fcat} onChange={e=>setFcat(e.target.value)}>{CATS.map(c=><option key={c}>{c}</option>)}</select></div>
+          {fcat==="Otros"&&<div><label className="lbl">Especificar</label><input className="inp" value={fcust} onChange={e=>setFcust(e.target.value)}/></div>}
+        </div>
+        {ff&&!editId&&<div style={{background:"#f0fdf4",border:"1px solid #bbf7d0",borderRadius:10,padding:"10px 14px",margin:"10px 0",fontSize:12,color:"#16a34a"}}>
+          Corte: <strong>{getBillingPeriod(ff,bv).mesCorte}</strong> → Pago: <strong>{getBillingPeriod(ff,bv).pagoDate}</strong>
+        </div>}
+        {!editId&&<div style={{background:"#fafaf8",borderRadius:10,padding:"12px 16px",margin:"10px 0",border:"1px solid #ebe9e4"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:isMSI?10:0}}>
+            <div className="toggle" style={{background:isMSI?BK[bv].color:"#ddd"}} onClick={()=>setIsMSI(!isMSI)}><div className="tk" style={{left:isMSI?21:3}}/></div>
+            <span style={{fontSize:13,fontWeight:600}}>MSI</span></div>
+          {isMSI&&<div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:6}}>
+            <div><label className="lbl">Meses</label><select className="sel" style={{width:"auto"}} value={msiN} onChange={e=>setMsiN(+e.target.value)}>{[2,3,4,5,6,9,10,12,18,24].map(n=><option key={n} value={n}>{n}</option>)}</select></div>
+            {fm&&<div style={{background:"#fff",padding:"8px 14px",borderRadius:8,border:"1px solid #eee",fontSize:13,alignSelf:"end"}}>{msiN}× {fmt(parseFloat(fm)||0)} = <strong>{fmt((parseFloat(fm)||0)*msiN)}</strong></div>}
+          </div>}
+        </div>}
+        <button className="btn" style={{background:BK[bv].color,marginTop:8}} onClick={editId?saveEdit:()=>addEntry(bv)}>{editId?"Guardar":isMSI?`Agregar ${msiN} MSI`:"Agregar"}</button>
+      </div>
+
+      <div className="ct2" style={{marginTop:8}}>Movimientos{selM?` — ${selM}`:""}</div>
+      {bf.length===0?<div className="cd" style={{textAlign:"center",color:"#999",padding:30}}>Sin movimientos</div>
+      :<div className="cd" style={{padding:0,overflow:"hidden"}}><div style={{overflowX:"auto"}}><table>
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Titular</th><th>Cat.</th><th>Pago</th><th style={{textAlign:"right"}}>Monto</th><th style={{width:60}}></th></tr></thead>
+        <tbody>{[...bf].sort((a,b)=>(b._ts||0)-(a._ts||0)).map(r=><tr key={r.id} style={editId===r.id?{background:"#fffbeb"}:{}}>
+          <td style={{fontSize:11,color:"#666"}}>{r.fecha}</td>
+          <td style={{fontWeight:500,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.concepto}</td>
+          <td><span className="tag" style={{background:r.titular==="LEO"?"#1a1a1a12":"#8b735512",color:r.titular==="LEO"?"#1a1a1a":"#8b7355"}}>{r.titular}</span></td>
+          <td style={{fontSize:10,color:CC[r.cat]||"#999"}}>{r.cat}</td>
+          <td style={{fontSize:10,color:"#999"}}>{r.mesPago}</td>
+          <td style={{textAlign:"right",fontWeight:600,color:r.monto<0?"#16a34a":"#1a1a1a"}}>{fmt(r.monto)}</td>
+          <td style={{whiteSpace:"nowrap"}}><button onClick={()=>startEdit(r)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,padding:2,marginRight:2}}>✎</button><button onClick={()=>del(r.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#dc2626",fontSize:14,padding:2}}>✕</button></td>
+        </tr>)}</tbody>
+      </table></div></div>}
+    </>}
+
+    {/* ═══ NU DÉBITO ═══ */}
+    {view==="NuDeb"&&<>
+      <div className="bh" style={{background:BK.NuDeb.grad,color:BK.NuDeb.txt}}>
+        <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:2,opacity:.5,marginBottom:6}}>Nu Débito</div>
+        <div style={{fontSize:34,fontWeight:700,marginBottom:4}}>{fmt(nudeb.reduce((s,r)=>s+r.monto,0))}</div>
+        <div style={{fontSize:12,opacity:.6}}>{nudeb.length} movimientos</div>
+      </div>
+      {nudeb.length>0&&catBars(nudeb.map(r=>({...r,titular:"LEO"})))}
+      <div className="cd">
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div className="ct2">{editDebId?"✎ Editar":"+ Registrar"} — Nu Débito</div>
+          {editDebId&&<button onClick={cancelEditD} style={{background:"none",border:"none",color:"#999",fontSize:12}}>✕ Cancelar</button>}
+        </div>
+        <div className={mob?"":"g3"} style={mob?{display:"flex",flexDirection:"column",gap:10}:{gap:10,marginBottom:14}}>
+          <div><label className="lbl">Fecha</label><input type="date" className="inp" value={df} onChange={e=>setDf(e.target.value)}/></div>
+          <div><label className="lbl">Monto</label><input type="number" step="0.01" className="inp" placeholder="0.00" value={dm} onChange={e=>setDm(e.target.value)}/></div>
+          <div><label className="lbl">Categoría</label><select className="sel" value={dcat} onChange={e=>setDcat(e.target.value)}>{CATS.map(c=><option key={c}>{c}</option>)}</select></div>
+          <div style={mob?{}:{gridColumn:"1/-1"}}><label className="lbl">Concepto</label><input className="inp" placeholder="¿En qué gastaste?" value={dc} onChange={e=>setDc(e.target.value)}/></div>
+          {dcat==="Otros"&&<div><label className="lbl">Especificar</label><input className="inp" value={dcust} onChange={e=>setDcust(e.target.value)}/></div>}
+        </div>
+        <button className="btn" style={{background:"#820ad1",marginTop:8}} onClick={editDebId?saveEditD:addDeb}>{editDebId?"Guardar":"Registrar"}</button>
+      </div>
+      {nudeb.length>0&&<div className="cd" style={{padding:0,overflow:"hidden"}}><div style={{overflowX:"auto"}}><table>
+        <thead><tr><th>Fecha</th><th>Concepto</th><th>Cat.</th><th style={{textAlign:"right"}}>Monto</th><th style={{width:60}}></th></tr></thead>
+        <tbody>{[...nudeb].sort((a,b)=>(b._ts||0)-(a._ts||0)).map(r=><tr key={r.id} style={editDebId===r.id?{background:"#f3e8ff"}:{}}>
+          <td style={{fontSize:11,color:"#666"}}>{r.fecha}</td><td style={{fontWeight:500}}>{r.concepto}</td>
+          <td style={{fontSize:10,color:CC[r.cat]||"#999"}}>{r.cat}</td>
+          <td style={{textAlign:"right",fontWeight:600}}>{fmt(r.monto)}</td>
+          <td style={{whiteSpace:"nowrap"}}><button onClick={()=>startEditD(r)} style={{background:"none",border:"none",cursor:"pointer",fontSize:14,padding:2,marginRight:2}}>✎</button><button onClick={()=>delD(r.id)} style={{background:"none",border:"none",cursor:"pointer",color:"#dc2626",fontSize:14,padding:2}}>✕</button></td>
+        </tr>)}</tbody>
+      </table></div></div>}
+    </>}
+
+    <div style={{textAlign:"center",padding:"28px 0 14px",fontSize:11,color:"#bbb"}}>vault.leo v5</div>
+    </div>
+  </div>;
+}
+
+ReactDOM.createRoot(document.getElementById("app")).render(<App/>);
+</script>
+</body>
+</html>
